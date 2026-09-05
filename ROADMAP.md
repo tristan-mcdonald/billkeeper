@@ -135,7 +135,7 @@ Create `.github/workflows/ci.yml`:
 - Top-level `permissions: contents: read`.
 - A concurrency group keyed on the workflow and ref, with `cancel-in-progress: true`.
 - One job `check` with `strategy.fail-fast: false` and `strategy.matrix` over `os: [ubuntu-latest, macos-latest]` and `python-version: ["3.12", "3.13"]`, running on `${{ matrix.os }}`.
-- Steps: `actions/checkout@v7`; `astral-sh/setup-uv@v10` with `enable-cache: true`; `uv python install ${{ matrix.python-version }}`; install Pandoc with `pandoc/actions/setup@v1` and Typst with `typst-community/setup-typst@v5`; a step running `pandoc --version` and `typst --version` so the log proves both are on PATH; `uv sync --all-extras --dev --python ${{ matrix.python-version }}`; then `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy`, and `uv run pytest -q` as four separately named steps so a failure is easy to locate.
+- Steps: `actions/checkout@v7`; `astral-sh/setup-uv@v10.0.1` with `enable-cache: true` (an exact pin: upstream publishes floating major tags only through v7); `uv python install ${{ matrix.python-version }}`; install Pandoc with `pandoc/actions/setup@v1` and Typst with `typst-community/setup-typst@v5`; a step running `pandoc --version` and `typst --version` so the log proves both are on PATH; `uv sync --all-extras --dev --python ${{ matrix.python-version }}`; then `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy`, and `uv run pytest -q` as four separately named steps so a failure is easy to locate.
 
 Also add `tests/test_environment.py` with a test asserting the running Python is 3.12 or newer, and a second test that asserts `pandoc` and `typst` resolve via `shutil.which`, marked with a `requires_tools` marker and skipped when the binaries are absent — so the suite passes on a bare laptop but exercises the check in CI. Register the `requires_tools` marker in `pyproject.toml`.
 
@@ -798,7 +798,7 @@ Create `scripts/changelog_section.py`: a dependency-free script taking a version
 Create `.github/workflows/release.yml`:
 - Trigger `push` on tags `v*`; top-level `permissions: contents: read`.
 - Job `checks` that reuses the CI workflow with `uses: ./.github/workflows/ci.yml`.
-- Job `build`, needing `checks`: checkout, `astral-sh/setup-uv@v10`, a step that verifies the pushed tag equals `v` plus the `[project] version` in `pyproject.toml` and fails with a clear message otherwise, `uv build`, then upload `dist/` with `actions/upload-artifact@v7`.
+- Job `build`, needing `checks`: checkout, `astral-sh/setup-uv@v10.0.1`, a step that verifies the pushed tag equals `v` plus the `[project] version` in `pyproject.toml` and fails with a clear message otherwise, `uv build`, then upload `dist/` with `actions/upload-artifact@v7`.
 - Job `publish`, needing `build`, with `permissions: id-token: write`, `environment: pypi`, downloading the artifact and calling `pypa/gh-action-pypi-publish@release/v1` with no username or password — trusted publishing only. Do not add a PyPI token anywhere, and do not add a fallback token path.
 - Job `github-release`, needing `publish`, with `permissions: contents: write`: checkout, extract the notes with `python scripts/changelog_section.py "${GITHUB_REF_NAME#v}"`, and create the release with `gh release create` attaching the built artifacts.
 
