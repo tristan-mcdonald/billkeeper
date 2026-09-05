@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "billkeeper"
+version = "0.1.0"
+description = "A command-line invoice generator for freelancers and the self-employed."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["invoice", "invoicing", "billing", "freelance", "cli", "accounting"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial :: Accounting",
+    "Typing :: Typed",
+]
+dependencies = [
+    "typer",
+    "pydantic>=2",
+]
+
+[project.urls]
+Homepage = "https://billkeeper.money"
+Repository = "https://github.com/OWNER/billkeeper"
+Changelog = "https://github.com/OWNER/billkeeper/blob/main/CHANGELOG.md"
+
+[project.scripts]
+billkeeper = "billkeeper.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "mypy",
+    "ruff",
+    "pre-commit",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/billkeeper"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error"]
