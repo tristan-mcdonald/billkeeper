@@ -2,7 +2,7 @@
 
 `billkeeper` is a command-line invoice generator for freelancers and self-employed people. Each user runs it from their own terminal against their own private data repo.
 
-PyPI: `billkeeper` · License: MIT · Homepage: <https://billkeeper.money>
+PyPI: `billkeeper` · License: MIT · Homepage: <https://billkeeper.money> · Repository: <https://github.com/tristan-mcdonald/billkeeper>
 
 ## Fixed decisions
 
@@ -80,7 +80,7 @@ Fixed decisions that apply here:
 - Project homepage is https://billkeeper.money.
 
 Create:
-- `pyproject.toml` using hatchling as the build backend, `requires-python = ">=3.12"`, version `0.1.0`, description, MIT license, keywords, classifiers, dependencies `typer` and `pydantic>=2`, and `[project.urls]` with `Homepage = "https://billkeeper.money"`, `Repository`, and `Changelog` (point Repository and Changelog at `https://github.com/OWNER/billkeeper`, leaving `OWNER` as a literal placeholder for now). Add the console script entry point `billkeeper = "billkeeper.cli:main"`. Add a `[dependency-groups] dev` group with `pytest`, `mypy`, `ruff`, and `pre-commit`.
+- `pyproject.toml` using hatchling as the build backend, `requires-python = ">=3.12"`, version `0.1.0`, description, MIT license, keywords, classifiers, dependencies `typer` and `pydantic>=2`, and `[project.urls]` with `Homepage = "https://billkeeper.money"`, `Repository`, and `Changelog` (point Repository and Changelog at `https://github.com/tristan-mcdonald/billkeeper`). Add the console script entry point `billkeeper = "billkeeper.cli:main"`. Add a `[dependency-groups] dev` group with `pytest`, `mypy`, `ruff`, and `pre-commit`.
 - Ruff configuration in `pyproject.toml`: line length 100, target py312, and a rule selection covering at least `E`, `F`, `I`, `UP`, `B`, `SIM`, `RUF`.
 - Mypy configuration in `pyproject.toml`: `strict = true`, `python_version = "3.12"`, files `src` and `tests`.
 - Pytest configuration in `pyproject.toml`: `testpaths = ["tests"]`, and treat warnings as errors.
@@ -139,7 +139,7 @@ Create `.github/workflows/ci.yml`:
 
 Also add `tests/test_environment.py` with a test asserting the running Python is 3.12 or newer, and a second test that asserts `pandoc` and `typst` resolve via `shutil.which`, marked with a `requires_tools` marker and skipped when the binaries are absent — so the suite passes on a bare laptop but exercises the check in CI. Register the `requires_tools` marker in `pyproject.toml`.
 
-Add a CI status badge to `README.md` pointing at the workflow, using `OWNER` as the literal placeholder in the URL to match `pyproject.toml`.
+Add a CI status badge to `README.md` pointing at the workflow, using the same `tristan-mcdonald/billkeeper` slug as `pyproject.toml`.
 
 Run the full test suite, make sure it passes, and commit with a descriptive message.
 ````
@@ -804,7 +804,7 @@ Create `.github/workflows/release.yml`:
 
 Add a `Releasing` section to `CONTRIBUTING.md`: bump `[project] version`, move `Unreleased` entries into the new version section with today's date, commit, tag with `git tag v0.1.0 && git push origin v0.1.0`, and the one-time PyPI setup — create a trusted publisher for the `billkeeper` project pointing at this repository, the workflow file `release.yml`, and the `pypi` environment, and create that environment in the repository settings.
 
-Replace every remaining `OWNER` placeholder in `pyproject.toml`, `README.md`, and the workflows with the real repository slug, taking it from `git remote get-url origin`; if there is no remote, leave the placeholder and say so in your final message.
+Confirm every GitHub URL in `pyproject.toml`, `README.md`, and the workflows uses the real repository slug from `git remote get-url origin` (`tristan-mcdonald/billkeeper`), and that no `OWNER` placeholder has crept back in.
 
 Verify the build locally: run `uv build`, confirm `dist/` contains both an sdist and a wheel with version `0.1.0`, install the wheel into a throwaway environment, and confirm `billkeeper --version` and `billkeeper --help` work from it. Confirm `python scripts/changelog_section.py 0.1.0` prints the release notes. Do not push a tag.
 
@@ -818,4 +818,4 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 - [ ] `scripts/changelog_section.py` extracts that section; `tests/test_changelog_section.py` passes.
 - [ ] `uv build` produces a `0.1.0` sdist and wheel; the installed wheel's `billkeeper --version` and `--help` work.
 - [ ] `CONTRIBUTING.md` documents the tagging steps and the one-time trusted-publisher setup.
-- [ ] No `OWNER` placeholder remains where a real remote is configured.
+- [ ] Every GitHub URL uses the real `tristan-mcdonald/billkeeper` slug; no `OWNER` placeholder remains.
