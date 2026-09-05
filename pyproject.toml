@@ -62,3 +62,6 @@ files = ["src", "tests"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["error"]
+markers = [
+    "requires_tools: needs the external rendering tools (pandoc, typst) on PATH",
+]
