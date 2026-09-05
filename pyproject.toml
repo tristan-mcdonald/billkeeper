@@ -26,6 +26,7 @@ classifiers = [
 dependencies = [
     "typer",
     "pydantic>=2",
+    "babel",
 ]
 
 [project.urls]
