@@ -30,8 +30,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://billkeeper.money"
-Repository = "https://github.com/OWNER/billkeeper"
-Changelog = "https://github.com/OWNER/billkeeper/blob/main/CHANGELOG.md"
+Repository = "https://github.com/tristan-mcdonald/billkeeper"
+Changelog = "https://github.com/tristan-mcdonald/billkeeper/blob/main/CHANGELOG.md"
 
 [project.scripts]
 billkeeper = "billkeeper.cli:main"
