@@ -56,7 +56,7 @@ These were open at the level of the brief; they are settled here so no session h
 
 ## How to use this roadmap
 
-Each session is one focused coding session that ends with a passing test suite and a commit. Copy the fenced **Prompt** block verbatim into a fresh agent session — each is self-contained and restates the decisions it touches.
+Each session is one focused coding session that ends with a passing test suite and a commit. Copy the fenced **Prompt** block verbatim into a fresh agent session — each is self-contained and restates the decisions it touches. Tick a session's acceptance criteria as they are verified, so the next session to pick up is the first one whose boxes are still empty.
 
 ---
 
@@ -104,12 +104,12 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `uv sync` succeeds and writes a lockfile.
-- [ ] `uv run billkeeper hello` prints `billkeeper 0.1.0`.
-- [ ] `uv run billkeeper --version` prints `0.1.0`.
-- [ ] `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy`, and `uv run pytest` all exit 0.
-- [ ] `pyproject.toml`, `LICENSE`, `README.md`, `.pre-commit-config.yaml`, `.gitignore`, `src/billkeeper/__init__.py`, `src/billkeeper/cli/__init__.py`, `src/billkeeper/py.typed`, and `tests/test_cli_smoke.py` exist.
-- [ ] No author name, email, or address appears anywhere in the repo.
+- [x] `uv sync` succeeds and writes a lockfile.
+- [x] `uv run billkeeper hello` prints `billkeeper 0.1.0`.
+- [x] `uv run billkeeper --version` prints `0.1.0`.
+- [x] `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy`, and `uv run pytest` all exit 0.
+- [x] `pyproject.toml`, `LICENSE`, `README.md`, `.pre-commit-config.yaml`, `.gitignore`, `src/billkeeper/__init__.py`, `src/billkeeper/cli/__init__.py`, `src/billkeeper/py.typed`, and `tests/test_cli_smoke.py` exist.
+- [x] No author name, email, or address appears anywhere in the repo.
 
 ---
 
@@ -146,11 +146,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `.github/workflows/ci.yml` exists with the four-way matrix and both Pandoc and Typst install steps.
-- [ ] The workflow declares `workflow_call` alongside `push` and `pull_request`.
-- [ ] `tests/test_environment.py` exists; the tool check skips cleanly when the binaries are absent.
-- [ ] `README.md` shows a CI badge.
-- [ ] The workflow YAML parses, and local `uv run pytest` passes.
+- [x] `.github/workflows/ci.yml` exists with the four-way matrix and both Pandoc and Typst install steps.
+- [x] The workflow declares `workflow_call` alongside `push` and `pull_request`.
+- [x] `tests/test_environment.py` exists; the tool check skips cleanly when the binaries are absent.
+- [x] `README.md` shows a CI badge.
+- [x] The workflow YAML parses, and local `uv run pytest` passes.
 
 ---
 
@@ -191,10 +191,10 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `src/billkeeper/errors.py` and `src/billkeeper/money.py` exist; `babel` is a declared dependency.
-- [ ] `tests/test_money.py` passes, including the JPY, KWD, mismatch, half-up rounding, and float-rejection cases.
-- [ ] No `float` appears in any monetary code path.
-- [ ] `uv run mypy` and `uv run ruff check .` exit 0.
+- [x] `src/billkeeper/errors.py` and `src/billkeeper/money.py` exist; `babel` is a declared dependency.
+- [x] `tests/test_money.py` passes, including the JPY, KWD, mismatch, half-up rounding, and float-rejection cases.
+- [x] No `float` appears in any monetary code path.
+- [x] `uv run mypy` and `uv run ruff check .` exit 0.
 
 ---
 
