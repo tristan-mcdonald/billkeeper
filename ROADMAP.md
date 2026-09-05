@@ -49,6 +49,7 @@ These were open at the level of the brief; they are settled here so no session h
 - **Runtime dependencies:** `typer`, `pydantic>=2`, `jinja2`, `tomli-w` (the stdlib `tomllib` reads TOML but cannot write it), `babel` (locale-aware money formatting). Nothing else.
 - **Slugs:** lowercase, Unicode NFKD-normalised and stripped to ASCII, every run of non-alphanumeric characters collapsed to a single `-`, leading and trailing `-` removed, truncated to 40 characters. On collision, append `-2`, `-3`, … .
 - **Draft identity:** drafts have no invoice number, so they live at `invoices/drafts/<draft-id>.toml` where `<draft-id>` is `<client-slug>-<YYYYMMDD>` plus `-2`, `-3`, … on collision. On `issue` the file moves to `invoices/<YYYY>/<number>.toml`. Any command taking `<id>` accepts an invoice number, a draft id, or an unambiguous prefix of either.
+- **Model base class:** every Pydantic model derives from `models.BillkeeperModel`, which sets `extra="forbid"` and re-raises Pydantic's own validation errors as `errors.ValidationError`. A mistyped key in a hand-edited TOML file then reaches the user as one clear line rather than a Pydantic traceback, and the CLI keeps a single exception type to catch.
 - **Client snapshot:** creating a draft copies the client's details into the invoice file, so an issued invoice is self-contained and immune to later client edits.
 - **Sequence file:** `sequence.toml` holds a `[next]` table mapping a scope key to the next integer. The scope key is the four-digit year when `[numbering] reset = "yearly"` (the default) and the literal `all` when `reset = "never"`.
 - **Immutability, precisely:** after issue, every field except `status` and `status_history` is frozen. The storage layer re-reads the file before writing and refuses any write that changes a frozen field.
@@ -235,18 +236,18 @@ Create `src/billkeeper/numbering.py`:
 - `format_number(fmt: str, year: int, seq: int) -> str`.
 - `validate_format(fmt: str) -> None`: the format must contain `{seq`, must use only the `year` and `seq` placeholders, must produce a filesystem-safe result (no `/`, no path separators, no whitespace), and must yield distinct strings for seq 1 and 2. Raise `ValidationError` with a message that shows the offending format.
 
-Write `tests/test_models.py` covering: slugify on accented text ("Åsa Björk Ltd" → "asa-bjork-ltd"), on punctuation-heavy names, on over-long names, and on a name that slugifies to empty (raises); every legal and at least four illegal status transitions; void without a reason raises; per-line rounding before summing (three lines of `0.005`-style values in a 2-minor-unit currency sum the way rounded lines do, not the way raw products do); a JPY invoice totals in whole units; `validate_issuable` rejects an empty invoice and a negative-total `invoice` but accepts a negative-total `credit_note`; `extra="forbid"` rejects an unknown field; `tax` defaults to `None`. Write `tests/test_numbering.py` covering the default format at seq 1 and 9999, a custom format like `{year}/{seq:03d}`, and rejection of formats with no `{seq}`, with a path separator, or with an unknown placeholder.
+Write `tests/test_models.py` covering: slugify on accented text ("Åsa Björk Ltd" → "asa-bjork-ltd"), on punctuation-heavy names, on over-long names, and on a name that slugifies to empty (raises); every legal and at least four illegal status transitions; void without a reason raises; per-line rounding before summing (three lines of `0.005`-style values in a 2-minor-unit currency sum the way rounded lines do, not the way raw products do); a JPY invoice totals in whole units; `validate_issuable` rejects an empty invoice and a negative-total `invoice` but accepts a negative-total `credit_note`; `extra="forbid"` rejects an unknown field; `tax` defaults to `None`. Write `tests/test_numbering.py` covering the default format at seq 1 and 9999, a usable custom format such as `{year}-{seq:03d}`, and rejection of formats with no `{seq}`, with a path separator (`{year}/{seq:03d}` renders fine but is not filename-safe, as Session 7 also notes), or with an unknown placeholder.
 
 Run the full test suite, make sure it passes, and commit with a descriptive message.
 ````
 
 **Acceptance criteria**
 
-- [ ] `src/billkeeper/models.py` and `src/billkeeper/numbering.py` exist.
-- [ ] `tests/test_models.py` and `tests/test_numbering.py` pass.
-- [ ] Illegal status transitions and unknown TOML keys both raise `ValidationError`.
-- [ ] `LineItem.tax` exists and is `None`.
-- [ ] `uv run mypy` exits 0 under strict mode.
+- [x] `src/billkeeper/models.py` and `src/billkeeper/numbering.py` exist.
+- [x] `tests/test_models.py` and `tests/test_numbering.py` pass.
+- [x] Illegal status transitions and unknown TOML keys both raise `ValidationError`.
+- [x] `LineItem.tax` exists and is `None`.
+- [x] `uv run mypy` exits 0 under strict mode.
 
 ---
 
