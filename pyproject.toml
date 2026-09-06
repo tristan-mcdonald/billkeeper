@@ -27,6 +27,7 @@ dependencies = [
     "typer",
     "pydantic>=2",
     "babel",
+    "tomli-w",
 ]
 
 [project.urls]

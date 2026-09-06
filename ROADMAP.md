@@ -287,10 +287,10 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `src/billkeeper/config.py` exists; `tomli-w` is a declared dependency.
-- [ ] `tests/test_config.py` passes and never reads or writes the real `$HOME`.
-- [ ] `resolve_repo` precedence is `--repo` > `BILLKEEPER_REPO` > user config > `~/billkeeper`.
-- [ ] `RepoNotFoundError` message is one line and names `billkeeper init`.
+- [x] `src/billkeeper/config.py` exists; `tomli-w` is a declared dependency.
+- [x] `tests/test_config.py` passes and never reads or writes the real `$HOME`.
+- [x] `resolve_repo` precedence is `--repo` > `BILLKEEPER_REPO` > user config > `~/billkeeper`.
+- [x] `RepoNotFoundError` message is one line and names `billkeeper init`.
 
 ---
 

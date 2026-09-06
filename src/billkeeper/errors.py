@@ -23,3 +23,17 @@ class CurrencyError(BillkeeperError):
 
 class CurrencyMismatchError(CurrencyError):
     """An attempt to combine amounts denominated in different currencies."""
+
+
+class ConfigError(BillkeeperError):
+    """Configuration that billkeeper cannot read or make sense of."""
+
+
+class RepoNotFoundError(BillkeeperError):
+    """No data repo where billkeeper was told to look."""
+
+    #: What to say when no particular path is to blame for the miss.
+    DEFAULT_MESSAGE = "No billkeeper data repo found. Run 'billkeeper init' to create one."
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.DEFAULT_MESSAGE)
