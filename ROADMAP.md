@@ -48,7 +48,7 @@ These were open at the level of the brief; they are settled here so no session h
 - **Package layout:** `src/` layout, package `billkeeper`. Modules: `errors.py`, `money.py`, `models.py`, `numbering.py`, `config.py`, `storage.py`, `sequence.py`, `gitrepo.py`, `render.py`, `cli/` (one module per command group), `templates/` (packaged default template files).
 - **Runtime dependencies:** `typer`, `pydantic>=2`, `jinja2`, `tomli-w` (the stdlib `tomllib` reads TOML but cannot write it), `babel` (locale-aware money formatting). Nothing else.
 - **Slugs:** lowercase, Unicode NFKD-normalised and stripped to ASCII, every run of non-alphanumeric characters collapsed to a single `-`, leading and trailing `-` removed, truncated to 40 characters. On collision, append `-2`, `-3`, … .
-- **Draft identity:** drafts have no invoice number, so they live at `invoices/drafts/<draft-id>.toml` where `<draft-id>` is `<client-slug>-<YYYYMMDD>` plus `-2`, `-3`, … on collision. On `issue` the file moves to `invoices/<YYYY>/<number>.toml`. Any command taking `<id>` accepts an invoice number, a draft id, or an unambiguous prefix of either.
+- **Draft identity:** drafts have no invoice number, so they live at `invoices/drafts/<draft-id>.toml` where `<draft-id>` is `<client-slug>-<YYYYMMDD>` plus `-2`, `-3`, … on collision. The id is carried on the invoice as `draft_id`, exactly as a client carries its own `slug`, because a collision suffix cannot be derived from the invoice again later. On `issue` the file moves to `invoices/<YYYY>/<number>.toml` and `draft_id` is cleared: an invoice is named by its number or by its draft id, never both. Any command taking `<id>` accepts an invoice number, a draft id, or an unambiguous prefix of either.
 - **Model base class:** every Pydantic model derives from `models.BillkeeperModel`, which sets `extra="forbid"` and re-raises Pydantic's own validation errors as `errors.ValidationError`. A mistyped key in a hand-edited TOML file then reaches the user as one clear line rather than a Pydantic traceback, and the CLI keeps a single exception type to catch.
 - **Client snapshot:** creating a draft copies the client's details into the invoice file, so an issued invoice is self-contained and immune to later client edits.
 - **Sequence file:** `sequence.toml` holds a `[next]` table mapping a scope key to the next integer. The scope key is the four-digit year when `[numbering] reset = "yearly"` (the default) and the literal `all` when `reset = "never"`.
@@ -226,7 +226,7 @@ Create `src/billkeeper/models.py`:
 - `Client`: `slug`, `name`, `email: str | None`, `address: str | None` (multi-line), `contact: str | None`, `currency: str` (normalised through `money.normalize_currency`), `notes: str | None`. Validate that `slug == slugify(slug)`.
 - `LineItem`: `description: str` (non-empty), `quantity: Decimal`, `unit_price: Decimal`, `unit: str | None = None`, `tax: None = None` with a docstring stating it is the v1 extension point for tax and must stay `None`. Reject `float` inputs.
 - `ClientSnapshot`: the client fields copied onto an invoice at draft creation so an issued invoice is self-contained and unaffected by later client edits.
-- `Invoice`: `kind: Literal["invoice", "credit_note"] = "invoice"`, `number: str | None`, `client: ClientSnapshot`, `currency: str`, `created: date`, `issue_date: date | None`, `due_date: date | None`, `payment_terms_days: int`, `items: list[LineItem]`, `notes: str | None`, `references: str | None` (the number of the invoice a credit note or correction refers to), `status: InvoiceStatus = DRAFT`, `status_history: list[StatusEvent] = []`.
+- `Invoice`: `kind: Literal["invoice", "credit_note"] = "invoice"`, `number: str | None`, `draft_id: str | None` (what names a draft's file until a number does; the two are mutually exclusive), `client: ClientSnapshot`, `currency: str`, `created: date`, `issue_date: date | None`, `due_date: date | None`, `payment_terms_days: int`, `items: list[LineItem]`, `notes: str | None`, `references: str | None` (the number of the invoice a credit note or correction refers to), `status: InvoiceStatus = DRAFT`, `status_history: list[StatusEvent] = []`.
 - Configure every model with `extra="forbid"` so an unknown key in a hand-edited TOML file is an error, not silence.
 - Invoice methods: `line_total(item) -> Money` (quantity × unit price, quantized to the invoice currency); `subtotal -> Money` (sum of per-line totals, each rounded before summing); `total -> Money` (equal to `subtotal` in v1, kept separate so tax can slot in); `is_editable -> bool` (true only for `DRAFT`); `transition(to: InvoiceStatus, on: date, reason: str | None = None) -> None` which appends a `StatusEvent` and enforces the legal transitions: draft→issued, issued→paid, draft/issued→void, and nothing else — anything illegal raises `ValidationError` naming both statuses. Voiding requires a reason.
 - `validate_issuable() -> None`: raises `ValidationError` if there are no line items, if the invoice already has a number, or if the total is negative and `kind` is not `credit_note`.
@@ -309,6 +309,7 @@ Fixed decisions that apply here:
 - Storage is plain-text files in a git repository; there is no database.
 - Layout: `clients/<slug>.toml`, `invoices/<YYYY>/<number>.toml`, `config.toml`, `sequence.toml`, `templates/`.
 - Drafts have no number, so they live at `invoices/drafts/<draft-id>.toml`, where `<draft-id>` is `<client-slug>-<YYYYMMDD>` with `-2`, `-3`, … appended on collision. On issue the file moves to `invoices/<YYYY>/<number>.toml`.
+- `Invoice` carries its own `draft_id: str | None`, mutually exclusive with `number`, so the storage layer can find a draft's file again after a collision suffix was appended. Add it to `models.py` if it is not there yet.
 - Once an invoice is issued its file is never edited. Precisely: after issue, every field except `status` and `status_history` is frozen; a write that changes any other field must be refused.
 - Amounts are `Decimal` and must survive a TOML round-trip exactly — TOML has no decimal type, so write every `Decimal` as a quoted string and parse it back with `Decimal`.
 - Slugs follow `models.slugify`; on collision append `-2`, `-3`, … .
@@ -322,7 +323,7 @@ Create `src/billkeeper/storage.py` with a `Repo` class wrapping the repo root:
 - Invoices: `write_invoice(invoice)`, `read_invoice_at(path)`, `list_invoices()` (drafts plus every year, sorted by number then draft id), `allocate_draft_id(client_slug, on: date)`, `delete_draft(invoice)`.
 - `resolve(ident: str) -> Invoice`: match an exact invoice number in any year, then an exact draft id, then a unique case-insensitive prefix of either. No match raises `NotFoundError`; more than one raises `AmbiguousIdError` listing the candidates.
 - Immutability: `write_invoice` on an invoice whose status is not `draft` re-reads the file on disk first and raises `ImmutableInvoiceError` if any field other than `status` or `status_history` differs. Provide `move_draft_to_issued(invoice)` performing the draft-file removal and the numbered write as the one legitimate transition.
-- Serialisation lives here, not in the models: `to_toml_dict(invoice)` / `from_toml_dict(data)`, with dates as TOML local dates, `Decimal` as strings, and stable key ordering so a file re-written unchanged has a byte-identical result.
+- Serialisation lives here, not in the models: `to_toml_dict(invoice)` / `from_toml_dict(data)`, with dates as TOML local dates, `Decimal` as strings, and stable key ordering so a file re-written unchanged has a byte-identical result. Normalise CRLF to LF on the way in, because TOML's multi-line strings do it on the way out and the file would otherwise never settle.
 
 Write `tests/test_storage.py` using `tmp_path`, with a fixture that builds a bare repo directory tree: client round-trip preserves accented names and multi-line addresses; `allocate_slug` handles collisions; `Decimal("1234.005")` and a quantity like `Decimal("0.125")` round-trip exactly; an invoice with a JPY currency round-trips; `allocate_draft_id` produces `<slug>-<YYYYMMDD>` and then `-2` on the same day; `resolve` finds by number, by draft id, and by unique prefix, and raises `AmbiguousIdError` for a shared prefix; writing an issued invoice with a changed line item raises `ImmutableInvoiceError` while writing one with only a changed status succeeds; re-writing an unchanged invoice produces identical bytes; a TOML file with an unknown key fails to load with a clear error.
 
@@ -331,10 +332,10 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `src/billkeeper/storage.py` exists with the `Repo` class and the layout helpers above.
-- [ ] `tests/test_storage.py` passes, including the Decimal round-trip and immutability cases.
-- [ ] Writes are atomic (temp file plus `os.replace`).
-- [ ] `resolve` supports number, draft id, and unique prefix, and errors clearly on ambiguity.
+- [x] `src/billkeeper/storage.py` exists with the `Repo` class and the layout helpers above.
+- [x] `tests/test_storage.py` passes, including the Decimal round-trip and immutability cases.
+- [x] Writes are atomic (temp file plus `os.replace`).
+- [x] `resolve` supports number, draft id, and unique prefix, and errors clearly on ambiguity.
 
 ---
 

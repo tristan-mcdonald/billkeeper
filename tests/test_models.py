@@ -292,6 +292,7 @@ class TestInvoiceDefaults:
         invoice = make_invoice()
         assert invoice.kind == "invoice"
         assert invoice.number is None
+        assert invoice.draft_id is None
         assert invoice.status is InvoiceStatus.DRAFT
         assert invoice.status_history == []
         assert invoice.issue_date is None
@@ -306,6 +307,23 @@ class TestInvoiceDefaults:
     def test_kind_is_limited_to_invoice_and_credit_note(self) -> None:
         with pytest.raises(ValidationError, match="kind"):
             make_invoice(kind="receipt")
+
+
+class TestDraftId:
+    def test_a_draft_may_be_named_by_a_draft_id(self) -> None:
+        assert make_invoice(draft_id="acme-ltd-20260301-2").draft_id == "acme-ltd-20260301-2"
+
+    @pytest.mark.parametrize(
+        "value",
+        ["acme/20260301", "acme 20260301", "Acme-20260301", "-acme", "acme--20260301", ""],
+    )
+    def test_a_draft_id_that_could_not_be_a_filename_is_refused(self, value: str) -> None:
+        with pytest.raises(ValidationError, match="draft_id"):
+            make_invoice(draft_id=value)
+
+    def test_an_invoice_is_never_both_a_draft_and_a_number(self) -> None:
+        with pytest.raises(ValidationError, match="cannot be both"):
+            make_invoice(number="INV-2026-0001", draft_id="acme-20260301")
 
 
 class TestUnknownKeys:

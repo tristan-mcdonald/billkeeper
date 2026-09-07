@@ -25,6 +25,7 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -41,6 +42,12 @@ SLUG_MAX_LENGTH: Final = 40
 DEFAULT_PAYMENT_TERMS_DAYS: Final = 30
 
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
+
+# A draft id is built by the storage layer as `<client-slug>-<YYYYMMDD>`, with
+# `-2`, `-3`, … on collision, and becomes a filename. It is not run through
+# `slugify` because that truncates, which would make two long client names
+# collide; it is only checked to be safe in a path.
+_DRAFT_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 def slugify(value: str) -> str:
@@ -197,6 +204,13 @@ class Invoice(BillkeeperModel):
 
     kind: Literal["invoice", "credit_note"] = "invoice"
     number: str | None = None
+    draft_id: str | None = None
+    """What names the draft's file while it has no number.
+
+    An invoice is identified by its number, but a draft has none yet, so it
+    needs its own name to be stored and looked up under. The two are exclusive:
+    the storage layer clears `draft_id` at the moment it sets `number`.
+    """
     client: ClientSnapshot
     currency: CurrencyCode
     created: dt.date
@@ -208,6 +222,29 @@ class Invoice(BillkeeperModel):
     references: str | None = None
     status: InvoiceStatus = InvoiceStatus.DRAFT
     status_history: list[StatusEvent] = Field(default_factory=list)
+
+    @field_validator("draft_id")
+    @classmethod
+    def _draft_id_names_a_file_and_only_a_draft(
+        cls, value: str | None, info: ValidationInfo
+    ) -> str | None:
+        # Checked here rather than in a model validator so that the failure
+        # comes out of `BillkeeperModel` as a billkeeper error; `number` is
+        # declared first, so it has already been validated and is readable.
+        if value is None:
+            return None
+        if not _DRAFT_ID.match(value):
+            raise ValueError(
+                f"{value!r} is not a draft id; expected lowercase letters, digits, "
+                "and single hyphens, because it names a file"
+            )
+        number = info.data.get("number")
+        if number is not None:
+            raise ValueError(
+                f"cannot be both draft {value} and invoice {number}; "
+                "a draft id is dropped when a number is assigned"
+            )
+        return value
 
     def line_total(self, item: LineItem) -> Money:
         """Return what `item` comes to, rounded to the invoice's currency."""

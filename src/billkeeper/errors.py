@@ -29,6 +29,22 @@ class ConfigError(BillkeeperError):
     """Configuration that billkeeper cannot read or make sense of."""
 
 
+class NotFoundError(BillkeeperError):
+    """A client or invoice that the data repo does not hold."""
+
+
+class AlreadyExistsError(BillkeeperError):
+    """Something the data repo already holds, which billkeeper will not overwrite."""
+
+
+class AmbiguousIdError(BillkeeperError):
+    """An id that names more than one invoice, so billkeeper will not guess."""
+
+
+class ImmutableInvoiceError(BillkeeperError):
+    """An attempt to change an invoice that has already been issued."""
+
+
 class RepoNotFoundError(BillkeeperError):
     """No data repo where billkeeper was told to look."""
 
