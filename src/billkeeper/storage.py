@@ -183,7 +183,7 @@ def _read_toml(path: Path) -> dict[str, Any]:
         raise ValidationError(f"{path} is not valid TOML: {exc}") from None
 
 
-def _atomic_write(path: Path, text: str) -> None:
+def atomic_write(path: Path, text: str) -> None:
     """Write `text` to `path` in one indivisible step.
 
     The content lands in a temporary file in the same directory first, so the
@@ -281,7 +281,7 @@ class Repo:
     def write_client(self, client: Client) -> Path:
         """Write `client` to its file, and return where it went."""
         path = self.client_path(client.slug)
-        _atomic_write(path, _dumps(client_to_toml_dict(client)))
+        atomic_write(path, _dumps(client_to_toml_dict(client)))
         return path
 
     def read_client(self, slug: str) -> Client:
@@ -312,7 +312,7 @@ class Repo:
         path = self.invoice_path(invoice)
         if invoice.status != InvoiceStatus.DRAFT:
             self._refuse_frozen_change(invoice, path)
-        _atomic_write(path, _dumps(to_toml_dict(invoice)))
+        atomic_write(path, _dumps(to_toml_dict(invoice)))
         return path
 
     def read_invoice_at(self, path: Path) -> Invoice:
@@ -390,7 +390,7 @@ class Repo:
 
         invoice.draft_id = None
         try:
-            _atomic_write(path, _dumps(to_toml_dict(invoice)))
+            atomic_write(path, _dumps(to_toml_dict(invoice)))
         except BaseException:
             invoice.draft_id = draft_id
             raise

@@ -365,7 +365,7 @@ Create `src/billkeeper/sequence.py`:
 Create `src/billkeeper/gitrepo.py`:
 - `GitError(BillkeeperError)` in `errors.py`, carrying the git stderr.
 - `git_available() -> bool` and a check that raises `GitError` with an install hint when `git` is not on PATH.
-- `run_git(repo: Path, *args: str) -> str` — `subprocess.run` with a list argv (never `shell=True`), `cwd=repo`, captured output, `check=False`, raising `GitError` with the command and stderr on a non-zero exit. Always pass `-c commit.gpgsign=false` so a signing setup never blocks a commit, and `-c user.name=billkeeper -c user.email=billkeeper@localhost` only when `user.email` is not already configured, so the tool works in a fresh container without hijacking a configured identity.
+- `run_git(repo: Path, *args: str) -> str` — `subprocess.run` with a list argv (never `shell=True`), `cwd=repo`, captured output, `check=False`, raising `GitError` with the command and stderr on a non-zero exit. Always pass `-c commit.gpgsign=false` so a signing setup never blocks a commit, and `-c user.name=billkeeper` or `-c user.email=billkeeper@localhost` for whichever of the two git cannot already answer with here, so the tool works in a fresh container without hijacking a configured identity — filled in one key at a time, because a machine with a name configured but no address should commit under that name.
 - `init_repo(path: Path) -> None` — `git init` plus an initial empty-safe state.
 - `commit(repo: Path, paths: Sequence[Path], message: str) -> str | None` — stages exactly those paths, returns `None` without committing if nothing is staged, otherwise commits and returns the short SHA.
 - `is_git_repo(path) -> bool`, `head_sha(repo) -> str | None`.
@@ -379,10 +379,10 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `src/billkeeper/sequence.py` and `src/billkeeper/gitrepo.py` exist.
-- [ ] `tests/test_sequence.py` and `tests/test_gitrepo.py` pass against the real `git` binary.
-- [ ] Numbering is gapless, with a rollback path for failed issues.
-- [ ] No `shell=True` anywhere; no git library dependency added.
+- [x] `src/billkeeper/sequence.py` and `src/billkeeper/gitrepo.py` exist.
+- [x] `tests/test_sequence.py` and `tests/test_gitrepo.py` pass against the real `git` binary.
+- [x] Numbering is gapless, with a rollback path for failed issues.
+- [x] No `shell=True` anywhere; no git library dependency added.
 
 ---
 

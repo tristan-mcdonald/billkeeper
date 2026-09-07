@@ -53,3 +53,13 @@ class RepoNotFoundError(BillkeeperError):
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(message or self.DEFAULT_MESSAGE)
+
+
+class GitError(BillkeeperError):
+    """A git command that billkeeper could not run, or that ran and failed."""
+
+    def __init__(self, message: str, stderr: str = "") -> None:
+        super().__init__(message)
+        #: What git itself said, kept apart from the message so a caller can
+        #: show the raw complaint without billkeeper's framing around it.
+        self.stderr = stderr
