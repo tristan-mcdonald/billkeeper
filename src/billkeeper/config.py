@@ -207,6 +207,10 @@ def _read_toml(path: Path) -> dict[str, Any]:
 def _write_toml(path: Path, data: dict[str, Any]) -> None:
     try:
         with path.open("wb") as handle:
-            tomli_w.dump(data, handle)
+            # Multi-line strings written as multi-line strings: an address and
+            # a set of payment details are several lines each, and a config
+            # file meant to be hand-edited should not show them as one long
+            # line with `\n` in it.
+            tomli_w.dump(data, handle, multiline_strings=True)
     except OSError as exc:
         raise ConfigError(f"Cannot write {path}: {exc.strerror}.") from None

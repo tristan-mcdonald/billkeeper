@@ -413,7 +413,7 @@ In `src/billkeeper/cli/__init__.py`:
 - Register the `init` command from `src/billkeeper/cli/init_cmd.py`.
 
 Create `src/billkeeper/cli/init_cmd.py` implementing `init`:
-- Optional positional `PATH`. If given, use it without prompting for the path; otherwise prompt with `~/billkeeper` as the default.
+- Optional positional `PATH`. If given, use it without prompting for the path; otherwise prompt with `~/billkeeper` as the default. The global `--repo PATH` names the data repo for every other command, so `init` honours it as the target too, `$BILLKEEPER_REPO` is offered as the prompt's default when it is set, and a `--repo` that disagrees with the positional `PATH` is an error rather than a guess.
 - If `<path>/config.toml` exists, write that path to the user config, print `Already initialised: <path>/config.toml` followed by `billkeeper will now use <path>.`, and exit 0. Nothing inside the data repo is touched and no commit is made — the only write is the user config.
 - Prompt for issuer name, address (multi-line accepted as a single string; state in the prompt that `\n` may be used), email, and payment details; default currency (default `USD`); locale (default derived from `$LANG` if it parses, else `en_US`); numbering format (default `INV-{year}-{seq:04d}`, validated with `numbering.validate_format` and re-prompted on error).
 - Create `clients/`, `invoices/`, `invoices/drafts/`, and `templates/`, each with a `.gitkeep` where empty; write `config.toml` from a `RepoConfig`; write `sequence.toml` with an empty `[next]` table; copy the packaged default templates into `templates/`.
@@ -430,11 +430,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `billkeeper init /tmp/somewhere` creates `config.toml`, `sequence.toml`, `clients/`, `invoices/drafts/`, `templates/invoice.md`, `templates/invoice.typ`, and one git commit.
-- [ ] Re-running `init` on the same path says so and leaves the data repo byte-identical, with no new commit.
-- [ ] The repo path is written to `$XDG_CONFIG_HOME/billkeeper/config.toml`, both by a fresh `init` and by an `init` that finds an existing repo.
-- [ ] A command run with no data repo prints a single line naming `billkeeper init` and exits 1.
-- [ ] `tests/test_cli_init.py` and `tests/test_cli_no_repo.py` pass; no test touches the real `$HOME`.
+- [x] `billkeeper init /tmp/somewhere` creates `config.toml`, `sequence.toml`, `clients/`, `invoices/drafts/`, `templates/invoice.md`, `templates/invoice.typ`, and one git commit.
+- [x] Re-running `init` on the same path says so and leaves the data repo byte-identical, with no new commit.
+- [x] The repo path is written to `$XDG_CONFIG_HOME/billkeeper/config.toml`, both by a fresh `init` and by an `init` that finds an existing repo.
+- [x] A command run with no data repo prints a single line naming `billkeeper init` and exits 1.
+- [x] `tests/test_cli_init.py` and `tests/test_cli_no_repo.py` pass; no test touches the real `$HOME`.
 
 ---
 
