@@ -8,6 +8,13 @@ repo standing inside it, made the way a user makes one — by running `init` and
 answering its questions — so the tests exercise a repo the tool built rather
 than a hand-assembled imitation of one that could drift away from the real
 thing without any test noticing.
+
+The helpers below are here for the same reason. Reading the commit log and
+standing in a fake `$EDITOR` are what nearly every command test does, and a
+fake editor is the only way to exercise a command that opens one without a
+person at a terminal — with the pleasant side effect of testing exactly what
+those commands promise, that whatever the editor leaves on disk is what gets
+read back and committed.
 """
 
 from __future__ import annotations
@@ -20,6 +27,7 @@ from typer.testing import CliRunner
 
 from billkeeper.cli import app
 from billkeeper.config import REPO_ENV_VAR, XDG_CONFIG_HOME_ENV
+from billkeeper.gitrepo import run_git
 from billkeeper.storage import Repo
 
 #: What the `repo` fixture answers `init` with, in the order it asks.
@@ -73,3 +81,27 @@ def repo(tmp_path: Path, sandbox: Path) -> Repo:
     result = CliRunner().invoke(app, ["init", str(root)], input=answered(*INIT_ANSWERS))
     assert result.exit_code == 0, result.output
     return Repo(root.resolve())
+
+
+def commit_count(repo: Repo) -> int:
+    """Return how many commits the data repo has."""
+    return int(run_git(repo.root, "rev-list", "--count", "HEAD"))
+
+
+def head_message(repo: Repo) -> str:
+    """Return the subject line of the data repo's latest commit."""
+    return run_git(repo.root, "log", "-1", "--pretty=%s")
+
+
+def editor_running(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, body: str) -> None:
+    """Stand in an `$EDITOR` that runs `body`, with the file to edit as `$1`."""
+    script = tmp_path / "fake-editor.sh"
+    script.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
+    script.chmod(0o755)
+    monkeypatch.setenv("EDITOR", str(script))
+
+
+def editor_writing(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, content: str) -> None:
+    """Stand in an `$EDITOR` that replaces the file with `content`."""
+    heredoc = f"cat > \"$1\" <<'BILLKEEPER_EOF'\n{content}BILLKEEPER_EOF"
+    editor_running(monkeypatch, tmp_path, heredoc)

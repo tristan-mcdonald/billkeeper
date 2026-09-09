@@ -127,7 +127,7 @@ def show(
 ) -> None:
     """Show everything recorded about one client."""
     repo, _ = get_repo(ctx)
-    for line in _described(_load(repo, slug)):
+    for line in _described(load_client(repo, slug)):
         typer.echo(line)
 
 
@@ -138,7 +138,7 @@ def edit(
 ) -> None:
     """Open a client's file in $EDITOR, then check and commit what comes back."""
     repo, _ = get_repo(ctx)
-    _load(repo, slug)
+    load_client(repo, slug)
     path = repo.client_path(slug)
 
     before = path.read_bytes()
@@ -164,8 +164,12 @@ def edit(
     typer.echo(f"Updated client {slug}.")
 
 
-def _load(repo: Repo, slug: str) -> Client:
-    """Return the client called `slug`, or say how to find out what there is."""
+def load_client(repo: Repo, slug: str) -> Client:
+    """Return the client called `slug`, or say how to find out what there is.
+
+    Public because `billkeeper new` looks a client up the same way and should
+    fail the same way, down to the sentence telling the user where to look.
+    """
     if not repo.client_exists(slug):
         raise NotFoundError(
             f"No client named {slug!r}. Run 'billkeeper client list' to see them all."

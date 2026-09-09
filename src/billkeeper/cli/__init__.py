@@ -124,7 +124,13 @@ def main() -> None:
 # commands import `AppContext` and `get_repo` from here, so they can only be
 # registered once those exist.
 from billkeeper.cli.client import client_app  # noqa: E402
+from billkeeper.cli.draft import edit as edit_draft  # noqa: E402
+from billkeeper.cli.draft import new  # noqa: E402
 from billkeeper.cli.init_cmd import init  # noqa: E402
 
 app.command()(init)
+app.command()(new)
+# Renamed on the way in only to keep `edit` free at module level; the user
+# types `billkeeper edit`, and `billkeeper client edit` is a different command.
+app.command("edit")(edit_draft)
 app.add_typer(client_app, name="client")

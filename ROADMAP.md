@@ -45,7 +45,7 @@ Tax/VAT calculation, currency conversion, email sending, time tracking import, r
 
 These were open at the level of the brief; they are settled here so no session has to invent them.
 
-- **Package layout:** `src/` layout, package `billkeeper`. Modules: `errors.py`, `money.py`, `models.py`, `numbering.py`, `config.py`, `storage.py`, `sequence.py`, `gitrepo.py`, `render.py`, `cli/` (one module per command group), `templates/` (packaged default template files).
+- **Package layout:** `src/` layout, package `billkeeper`. Modules: `errors.py`, `money.py`, `models.py`, `numbering.py`, `config.py`, `storage.py`, `sequence.py`, `gitrepo.py`, `editor.py`, `clock.py`, `render.py`, `cli/` (one module per command group), `templates/` (packaged default template files).
 - **Runtime dependencies:** `typer`, `pydantic>=2`, `jinja2`, `tomli-w` (the stdlib `tomllib` reads TOML but cannot write it), `babel` (locale-aware money formatting). Nothing else.
 - **Slugs:** lowercase, Unicode NFKD-normalised and stripped to ASCII, every run of non-alphanumeric characters collapsed to a single `-`, leading and trailing `-` removed, truncated to 40 characters. On collision, append `-2`, `-3`, … .
 - **Draft identity:** drafts have no invoice number, so they live at `invoices/drafts/<draft-id>.toml` where `<draft-id>` is `<client-slug>-<YYYYMMDD>` plus `-2`, `-3`, … on collision. The id is carried on the invoice as `draft_id`, exactly as a client carries its own `slug`, because a collision suffix cannot be derived from the invoice again later. On `issue` the file moves to `invoices/<YYYY>/<number>.toml` and `draft_id` is cleared: an invoice is named by its number or by its draft id, never both. Any command taking `<id>` accepts an invoice number, a draft id, or an unambiguous prefix of either.
@@ -500,6 +500,8 @@ Fixed decisions that apply here:
 - `<id>` accepts an invoice number, a draft id, or an unambiguous prefix of either.
 - The tool commits to the data repo after every mutating command.
 
+Add `src/billkeeper/clock.py` with `today() -> date`, and take the default date from it rather than calling `date.today()` in the command, so tests can freeze time by monkeypatching one function.
+
 Create `src/billkeeper/cli/draft.py` and register both commands on the root app:
 - `new`: `--client <slug>` (required), `--currency` to override the client's default, `--date` for the creation date (default today), `--notes`, and `--no-edit` to skip opening the editor (used by tests and scripts). It builds an `Invoice` with the client snapshot, `status=draft`, no number, `payment_terms_days` from the repo config, and exactly one example line item (`description = "Describe the work"`, `quantity = "1"`, `unit_price = "0.00"`, `unit = "hour"`) so the file is valid and obvious to edit. It writes the file, opens it in the editor unless `--no-edit`, re-reads and validates, prints the draft id and the current total, and commits with `Create draft <draft-id>`.
 - `edit <id>`: resolves the id, refuses anything not `draft` with a message naming the status, for example `INV-2026-0001 is issued and cannot be edited. Create a credit note or a new invoice referencing it.`; otherwise opens the file, re-validates, prints the new total, and commits with `Edit draft <draft-id>` — or `No changes.` without a commit if the bytes are unchanged.
@@ -512,11 +514,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `billkeeper new --client acme --no-edit` writes a valid draft with a client snapshot and no number.
-- [ ] Draft ids collide safely with `-2` on the same day.
-- [ ] `billkeeper edit <id>` works on drafts and refuses every other status with an actionable message.
-- [ ] Invalid edits exit 1, preserve the user's file, and create no commit.
-- [ ] `tests/test_cli_draft.py` passes.
+- [x] `billkeeper new --client acme --no-edit` writes a valid draft with a client snapshot and no number.
+- [x] Draft ids collide safely with `-2` on the same day.
+- [x] `billkeeper edit <id>` works on drafts and refuses every other status with an actionable message.
+- [x] Invalid edits exit 1, preserve the user's file, and create no commit.
+- [x] `tests/test_cli_draft.py` passes.
 
 ---
 
@@ -586,7 +588,7 @@ Fixed decisions that apply here:
 - The tool commits to the data repo after every mutating command.
 - `<id>` accepts an invoice number, a draft id, or an unambiguous prefix.
 
-Add `src/billkeeper/clock.py` with `today() -> date`, and use it everywhere a command needs the current date, so tests can freeze time by monkeypatching one function.
+`src/billkeeper/clock.py` already exists, with `today() -> date`; `billkeeper new` dates a draft with it. Use it everywhere else a command needs the current date, so tests can freeze time by monkeypatching one function.
 
 Create `src/billkeeper/cli/issue.py`:
 - `issue <id>`: resolve the id; refuse anything that is not a draft with a message naming the current status; call `invoice.validate_issuable()`; allocate the number for the year of `clock.today()`; set `issue_date` to today and `due_date` to today plus `payment_terms_days`; transition to `issued`; move the draft file to `invoices/<YYYY>/<number>.toml`; render the PDF to `invoices/<YYYY>/<number>.pdf`; commit the TOML, the PDF, and `sequence.toml` together with the message `Issue invoice <number>`; print the number, the total, and the PDF path.

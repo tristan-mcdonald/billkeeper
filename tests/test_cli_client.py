@@ -1,9 +1,7 @@
 """Tests for `billkeeper client`, against a real data repo and a real git.
 
-The editor is a shell script written per test. Standing in a fake `$EDITOR` is
-the only way to exercise `client edit` without a person at a terminal, and it
-has the pleasant side effect of testing exactly what the command promises: that
-whatever the editor leaves on disk is what gets read back and committed.
+The fake `$EDITOR` the `edit` tests stand in comes from `conftest.py`, where
+the commands that open one all take it from.
 """
 
 from __future__ import annotations
@@ -19,7 +17,7 @@ from billkeeper.cli.client import EMPTY_MESSAGE, NO_CHANGES_MESSAGE
 from billkeeper.gitrepo import git_available, run_git
 from billkeeper.storage import Repo
 
-from conftest import REPO_CURRENCY
+from conftest import REPO_CURRENCY, commit_count, editor_running, editor_writing, head_message
 
 pytestmark = pytest.mark.skipif(not git_available(), reason="git is not installed")
 
@@ -44,28 +42,6 @@ def plain(text: str) -> str:
 def client(*args: str, stdin: str = "") -> Result:
     """Run `billkeeper client args…`."""
     return runner.invoke(app, ["client", *args], input=stdin)
-
-
-def commit_count(repo: Repo) -> int:
-    return int(run_git(repo.root, "rev-list", "--count", "HEAD"))
-
-
-def head_message(repo: Repo) -> str:
-    return run_git(repo.root, "log", "-1", "--pretty=%s")
-
-
-def editor_running(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, body: str) -> None:
-    """Stand in an `$EDITOR` that runs `body`, with the file to edit as `$1`."""
-    script = tmp_path / "fake-editor.sh"
-    script.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
-    script.chmod(0o755)
-    monkeypatch.setenv("EDITOR", str(script))
-
-
-def editor_writing(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, content: str) -> None:
-    """Stand in an `$EDITOR` that replaces the file with `content`."""
-    heredoc = f"cat > \"$1\" <<'BILLKEEPER_EOF'\n{content}BILLKEEPER_EOF"
-    editor_running(monkeypatch, tmp_path, heredoc)
 
 
 def add_acme(repo: Repo, *args: str) -> Result:
