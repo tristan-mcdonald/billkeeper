@@ -123,6 +123,8 @@ def main() -> None:
 # Imported last, and inside the module rather than at the top of it: the
 # commands import `AppContext` and `get_repo` from here, so they can only be
 # registered once those exist.
+from billkeeper.cli.client import client_app  # noqa: E402
 from billkeeper.cli.init_cmd import init  # noqa: E402
 
 app.command()(init)
+app.add_typer(client_app, name="client")

@@ -18,7 +18,6 @@ from billkeeper.cli import app
 from billkeeper.cli.init_cmd import DEFAULT_CURRENCY, INITIAL_COMMIT_MESSAGE
 from billkeeper.config import (
     REPO_ENV_VAR,
-    XDG_CONFIG_HOME_ENV,
     UserConfig,
     load_repo_config,
     load_user_config,
@@ -29,7 +28,11 @@ from billkeeper.gitrepo import git_available, run_git
 from billkeeper.numbering import DEFAULT_FORMAT
 from billkeeper.sequence import NEXT_TABLE
 
-pytestmark = pytest.mark.skipif(not git_available(), reason="git is not installed")
+pytestmark = [
+    pytest.mark.skipif(not git_available(), reason="git is not installed"),
+    # The sandbox lives in `conftest.py`, where the other CLI tests take it from.
+    pytest.mark.usefixtures("sandbox"),
+]
 
 runner = CliRunner()
 
@@ -59,22 +62,6 @@ EXPECTED_FILES = (
     "templates/invoice.md",
     "templates/invoice.typ",
 )
-
-
-@pytest.fixture(autouse=True)
-def sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Give the test a home of its own, and cut git off from every config file."""
-    home = tmp_path / "home"
-    home.mkdir()
-    monkeypatch.setenv("HOME", str(home))
-    monkeypatch.setenv("USERPROFILE", str(home))
-    monkeypatch.setenv(XDG_CONFIG_HOME_ENV, str(home / ".config"))
-    monkeypatch.delenv(REPO_ENV_VAR, raising=False)
-    monkeypatch.setenv("LANG", "en_GB.UTF-8")
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "no-such-gitconfig"))
-    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-    monkeypatch.setenv("GNUPGHOME", str(tmp_path / "no-such-gnupg"))
-    return home.resolve()
 
 
 def answered(*answers: str) -> str:

@@ -27,6 +27,7 @@ dependencies = [
     "typer",
     "pydantic>=2",
     "babel",
+    "rich",
     "tomli-w",
 ]
 
@@ -55,6 +56,10 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+# `conftest` is the tests' own module, not a package from somewhere else.
+known-local-folder = ["conftest"]
 
 [tool.mypy]
 strict = true

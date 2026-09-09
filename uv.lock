@@ -104,6 +104,7 @@ source = { editable = "." }
 dependencies = [
     { name = "babel" },
     { name = "pydantic" },
+    { name = "rich" },
     { name = "tomli-w" },
     { name = "typer" },
 ]
@@ -120,6 +121,7 @@ dev = [
 requires-dist = [
     { name = "babel" },
     { name = "pydantic", specifier = ">=2" },
+    { name = "rich" },
     { name = "tomli-w" },
     { name = "typer" },
 ]

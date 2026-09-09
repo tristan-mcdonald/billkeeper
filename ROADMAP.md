@@ -471,11 +471,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `billkeeper client add|list|show|edit` all work against a real data repo.
-- [ ] Each mutating command produces exactly one git commit with a descriptive message.
-- [ ] Slug collisions resolve to `-2`, `-3`; explicit duplicates are refused.
-- [ ] Invalid TOML from `client edit` exits 1 and commits nothing.
-- [ ] `tests/conftest.py` exposes a reusable initialised-repo fixture.
+- [x] `billkeeper client add|list|show|edit` all work against a real data repo.
+- [x] Each mutating command produces exactly one git commit with a descriptive message.
+- [x] Slug collisions resolve to `-2`, `-3`; explicit duplicates are refused.
+- [x] Invalid TOML from `client edit` exits 1 and commits nothing.
+- [x] `tests/conftest.py` exposes a reusable initialised-repo fixture.
 
 ---
 
