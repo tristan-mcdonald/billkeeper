@@ -127,10 +127,15 @@ from billkeeper.cli.client import client_app  # noqa: E402
 from billkeeper.cli.draft import edit as edit_draft  # noqa: E402
 from billkeeper.cli.draft import new  # noqa: E402
 from billkeeper.cli.init_cmd import init  # noqa: E402
+from billkeeper.cli.issue import issue, render_invoice  # noqa: E402
 
 app.command()(init)
 app.command()(new)
 # Renamed on the way in only to keep `edit` free at module level; the user
 # types `billkeeper edit`, and `billkeeper client edit` is a different command.
 app.command("edit")(edit_draft)
+app.command()(issue)
+# Named apart from the `render` module it calls, so the command and the pipeline
+# it drives can live in one file. The user still types `billkeeper render`.
+app.command("render")(render_invoice)
 app.add_typer(client_app, name="client")

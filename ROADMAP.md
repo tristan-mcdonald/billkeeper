@@ -602,11 +602,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `billkeeper issue <draft-id>` produces `invoices/<YYYY>/<number>.toml` and `.pdf` and one commit.
-- [ ] A failed render rolls the counter back, restores the draft, and commits nothing.
-- [ ] Numbering stays gapless across success and failure cases.
-- [ ] `billkeeper render <id>` is idempotent for issued invoices and skips the commit when nothing changed.
-- [ ] `tests/test_cli_issue.py` passes.
+- [x] `billkeeper issue <draft-id>` produces `invoices/<YYYY>/<number>.toml` and `.pdf` and one commit.
+- [x] A failed render rolls the counter back, restores the draft, and commits nothing.
+- [x] Numbering stays gapless across success and failure cases.
+- [x] `billkeeper render <id>` is idempotent for issued invoices and skips the commit when nothing changed.
+- [x] `tests/test_cli_issue.py` passes.
 
 ---
 

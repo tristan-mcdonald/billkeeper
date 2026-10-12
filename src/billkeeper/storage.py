@@ -186,15 +186,30 @@ def _read_toml(path: Path) -> dict[str, Any]:
 def atomic_write(path: Path, text: str) -> None:
     """Write `text` to `path` in one indivisible step.
 
+    Every file in the data repo is UTF-8 with LF line endings, so the text is
+    encoded here rather than written through a text-mode stream: it is the same
+    bytes either way, and it leaves one implementation to be careful in.
+    """
+    atomic_write_bytes(path, text.encode("utf-8"))
+
+
+def atomic_write_bytes(path: Path, data: bytes) -> None:
+    """Write `data` to `path` in one indivisible step.
+
     The content lands in a temporary file in the same directory first, so the
     final `os.replace` either publishes the whole invoice or none of it.
+
+    Bytes rather than text is what putting a file back exactly as it was found
+    needs — a draft restored after an issue that failed partway through. Read
+    as text and written again, a line ending the user's editor chose would come
+    back normalised, and "undo" would have changed the file after all.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     handle, name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     temporary = Path(name)
     try:
-        with os.fdopen(handle, "w", encoding="utf-8", newline="\n") as stream:
-            stream.write(text)
+        with os.fdopen(handle, "wb") as stream:
+            stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
         # `mkstemp` creates the file private to the user; the rest of the data
