@@ -23,6 +23,15 @@ class TestNormalizeCurrency:
         with pytest.raises(CurrencyError, match="not a valid currency code"):
             normalize_currency(code)
 
+    @pytest.mark.parametrize("code", ["XXQ", "GPB", "eru"])
+    def test_rejects_three_letters_that_are_not_an_iso_code(self, code: str) -> None:
+        with pytest.raises(CurrencyError, match="not an ISO 4217 currency code"):
+            normalize_currency(code)
+
+    @pytest.mark.parametrize("code", ["XTS", "XAU", "ZMW", "KWD"])
+    def test_accepts_special_and_less_common_iso_codes(self, code: str) -> None:
+        assert normalize_currency(code) == code
+
 
 class TestMinorUnits:
     @pytest.mark.parametrize(

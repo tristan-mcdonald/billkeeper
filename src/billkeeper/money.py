@@ -17,7 +17,7 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Final
 
 from babel.core import UnknownLocaleError
-from babel.numbers import format_currency
+from babel.numbers import format_currency, is_currency
 
 from billkeeper.errors import CurrencyError, CurrencyMismatchError
 
@@ -63,12 +63,23 @@ SYMBOLS: Final[dict[str, str]] = {
 
 
 def normalize_currency(code: str) -> str:
-    """Return `code` as a validated upper-case ISO 4217 code."""
+    """Return `code` as a validated upper-case ISO 4217 code.
+
+    Three letters is the shape of a code, not proof of one: `GPB` has it too.
+    Babel carries the full ISO 4217 list, historic and special codes included,
+    so a transposed code is refused here rather than filed on a client and
+    printed on every invoice raised against them.
+    """
     normalized = code.strip().upper()
     if not _CURRENCY_CODE.match(normalized):
         raise CurrencyError(
             f"{code!r} is not a valid currency code: "
             "expected three letters, such as 'EUR', 'GBP', or 'JPY'."
+        )
+    if not is_currency(normalized):
+        raise CurrencyError(
+            f"{normalized!r} is not an ISO 4217 currency code. "
+            "Check the spelling: 'EUR', 'GBP', and 'JPY' are examples of codes that are."
         )
     return normalized
 

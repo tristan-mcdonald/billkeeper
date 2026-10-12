@@ -129,6 +129,7 @@ from billkeeper.cli.draft import new  # noqa: E402
 from billkeeper.cli.init_cmd import init  # noqa: E402
 from billkeeper.cli.issue import issue, render_invoice  # noqa: E402
 from billkeeper.cli.query import list_invoices, show  # noqa: E402
+from billkeeper.cli.report import report_app  # noqa: E402
 from billkeeper.cli.status import mark_paid, void  # noqa: E402
 
 app.command()(init)
@@ -147,3 +148,4 @@ app.command()(show)
 app.command("mark-paid")(mark_paid)
 app.command()(void)
 app.add_typer(client_app, name="client")
+app.add_typer(report_app, name="report")

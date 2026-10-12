@@ -178,7 +178,7 @@ Create `src/billkeeper/errors.py` first: a `BillkeeperError(Exception)` base car
 Create `src/billkeeper/money.py`:
 - `MINOR_UNITS: dict[str, int]` listing only currencies whose minor-unit count is not 2: the 0-unit set (JPY, KRW, CLP, ISK, VND, XOF, XAF, XPF, BIF, DJF, GNF, KMF, PYG, RWF, UGX, VUV) and the 3-unit set (BHD, IQD, JOD, KWD, LYD, OMR, TND). Any other syntactically valid code defaults to 2.
 - `SYMBOLS: dict[str, str]` for the common cases (at least USD, EUR, GBP, JPY, CHF, CAD, AUD, NZD, SEK, NOK, DKK, PLN, INR, BRL, ZAR); anything absent formats with its code.
-- `normalize_currency(code: str) -> str` — uppercase, strip, validate against `^[A-Z]{3}$`, raising `CurrencyError` with a clear message otherwise.
+- `normalize_currency(code: str) -> str` — uppercase, strip, validate against `^[A-Z]{3}$` and then against the ISO 4217 list with `babel.numbers.is_currency` (so a well-formed typo such as `GPB` or `XXQ` is refused too), raising `CurrencyError` with a clear message otherwise.
 - `minor_units(code: str) -> int`.
 - A frozen, hashable `Money` value type with `amount: Decimal` and `currency: str`. Accept `str | int | Decimal` on construction, reject `float` explicitly with `CurrencyError`, normalise the currency, and quantize to the currency's minor units with `ROUND_HALF_UP`. Implement `__add__`, `__sub__` (raising `CurrencyMismatchError` on differing currencies), `__mul__` by `Decimal | int` (quantizing the result), `__neg__`, ordering comparisons, and `zero(currency)` / `is_zero`.
 - `format_money(value: Money, locale: str = "en_US") -> str` using `babel.numbers.format_currency`, falling back to `"{code} {amount}"` if Babel raises for an unknown locale.
@@ -685,11 +685,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `billkeeper report outstanding` and `billkeeper report revenue` work with `--year` and `--currency`.
-- [ ] Totals are grouped per currency and never summed across; the help text states the definitions.
-- [ ] `revenue --year` filters on the payment year; `outstanding --year` on the issue year.
-- [ ] Overdue counts and totals appear within each outstanding currency group.
-- [ ] `tests/test_reports.py` and `tests/test_cli_report.py` pass.
+- [x] `billkeeper report outstanding` and `billkeeper report revenue` work with `--year` and `--currency`.
+- [x] Totals are grouped per currency and never summed across; the help text states the definitions.
+- [x] `revenue --year` filters on the payment year; `outstanding --year` on the issue year.
+- [x] Overdue counts and totals appear within each outstanding currency group.
+- [x] `tests/test_reports.py` and `tests/test_cli_report.py` pass.
 
 ---
 
