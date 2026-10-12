@@ -17,6 +17,7 @@ has to name where the invoice actually is. The invoice set comes from
 from __future__ import annotations
 
 import datetime as dt
+import re
 from typing import Any
 
 import pytest
@@ -45,6 +46,8 @@ from conftest import (
 pytestmark = pytest.mark.skipif(not git_available(), reason="git is not installed")
 
 runner = CliRunner()
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 #: A reason of the kind a user actually types, and one with line breaks in it.
 REASON = "Client cancelled the project"
@@ -304,7 +307,9 @@ class TestVoidRefused:
         result = billkeeper("void", OUTSTANDING)
 
         assert result.exit_code != 0
-        assert "--reason" in result.output
+        # Click's usage error is drawn by Rich, which colours it on CI and
+        # styles the two dashes apart from the name, so the escapes come out.
+        assert "--reason" in ANSI_RE.sub("", result.output)
         assert stored(library, OUTSTANDING).status == InvoiceStatus.ISSUED
         assert commit_count(library) == before
 
