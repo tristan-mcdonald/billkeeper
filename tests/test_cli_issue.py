@@ -30,12 +30,20 @@ from billkeeper.cli import app
 from billkeeper.cli.issue import UP_TO_DATE_MESSAGE
 from billkeeper.config import RepoConfig, load_repo_config
 from billkeeper.errors import BillkeeperError
-from billkeeper.gitrepo import git_available, run_git
+from billkeeper.gitrepo import git_available
 from billkeeper.models import Invoice, InvoiceStatus
 from billkeeper.render import REQUIRED_TOOLS, missing_tools
 from billkeeper.storage import Repo
 
-from conftest import REPO_CURRENCY, commit_count, editor_writing, head_message
+from conftest import (
+    REPO_CURRENCY,
+    commit_count,
+    committed_paths,
+    editor_writing,
+    head_message,
+    relative,
+    uncommitted,
+)
 
 pytestmark = pytest.mark.skipif(not git_available(), reason="git is not installed")
 
@@ -147,28 +155,6 @@ def cfg_of(repo: Repo) -> RepoConfig:
 def next_number(repo: Repo, year: int = 2026) -> int:
     """Return the sequence number the next invoice of `year` would take."""
     return sequence.peek(repo, cfg_of(repo), year)
-
-
-def committed_paths(repo: Repo) -> set[str]:
-    """Return every path the latest commit touched, added or removed.
-
-    Renames are turned off on purpose: issuing moves a draft, and what has to
-    be checked is that both the path it left and the path it arrived at are in
-    the one commit.
-    """
-    listing = run_git(
-        repo.root, "diff-tree", "--no-commit-id", "--no-renames", "--name-only", "-r", "HEAD"
-    )
-    return {line for line in listing.splitlines() if line}
-
-
-def uncommitted(repo: Repo) -> str:
-    """Return what `git status` has to say, which after a command should be nothing."""
-    return run_git(repo.root, "status", "--porcelain")
-
-
-def relative(repo: Repo, path: Path) -> str:
-    return str(path.relative_to(repo.root))
 
 
 def stored(repo: Repo, path: Path) -> Invoice:

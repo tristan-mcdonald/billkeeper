@@ -128,6 +128,8 @@ from billkeeper.cli.draft import edit as edit_draft  # noqa: E402
 from billkeeper.cli.draft import new  # noqa: E402
 from billkeeper.cli.init_cmd import init  # noqa: E402
 from billkeeper.cli.issue import issue, render_invoice  # noqa: E402
+from billkeeper.cli.query import list_invoices, show  # noqa: E402
+from billkeeper.cli.status import mark_paid, void  # noqa: E402
 
 app.command()(init)
 app.command()(new)
@@ -138,4 +140,10 @@ app.command()(issue)
 # Named apart from the `render` module it calls, so the command and the pipeline
 # it drives can live in one file. The user still types `billkeeper render`.
 app.command("render")(render_invoice)
+# `list` under its own name, as `client list` is: the function cannot be called
+# that without shadowing the builtin in the module it is written in.
+app.command("list")(list_invoices)
+app.command()(show)
+app.command("mark-paid")(mark_paid)
+app.command()(void)
 app.add_typer(client_app, name="client")

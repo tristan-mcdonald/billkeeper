@@ -644,12 +644,12 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `billkeeper list` and its three filters work and combine.
-- [ ] `billkeeper show <id>` displays line items, totals, PDF path, and status history.
-- [ ] `mark-paid` and `void` enforce the legal transitions, record dates, and commit once each.
-- [ ] A voided issued invoice keeps its number and PDF.
-- [ ] No command sums amounts across currencies.
-- [ ] `tests/test_cli_query.py` and `tests/test_cli_status.py` pass.
+- [x] `billkeeper list` and its three filters work and combine.
+- [x] `billkeeper show <id>` displays line items, totals, PDF path, and status history.
+- [x] `mark-paid` and `void` enforce the legal transitions, record dates, and commit once each.
+- [x] A voided issued invoice keeps its number and PDF.
+- [x] No command sums amounts across currencies.
+- [x] `tests/test_cli_query.py` and `tests/test_cli_status.py` pass.
 
 ---
 

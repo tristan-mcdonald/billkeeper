@@ -21,7 +21,6 @@ must not restate the address on an invoice that was settled last year.
 
 from __future__ import annotations
 
-import datetime as dt
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Final
@@ -85,7 +84,7 @@ def new(
     """Start a draft invoice for a client, and open it in $EDITOR."""
     repo, cfg = get_repo(ctx)
     billed = load_client(repo, client)
-    created = _date(date)
+    created = clock.parse_date(date)
     draft_id = repo.allocate_draft_id(billed.slug, created)
 
     draft = Invoice(
@@ -197,17 +196,3 @@ def _example_item() -> LineItem:
         unit_price=Decimal("0.00"),
         unit=EXAMPLE_UNIT,
     )
-
-
-def _date(value: str) -> dt.date:
-    """Return the date `value` names, or today when it names none."""
-    trimmed = value.strip()
-    if not trimmed:
-        return clock.today()
-    try:
-        return dt.date.fromisoformat(trimmed)
-    except ValueError:
-        raise ValidationError(
-            f"{value!r} is not a date billkeeper can read. Write it as YYYY-MM-DD, "
-            f"like {clock.today():%Y-%m-%d}."
-        ) from None
