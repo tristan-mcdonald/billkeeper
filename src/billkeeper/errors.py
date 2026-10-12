@@ -55,6 +55,10 @@ class RepoNotFoundError(BillkeeperError):
         super().__init__(message or self.DEFAULT_MESSAGE)
 
 
+class MissingToolError(BillkeeperError):
+    """An external program billkeeper needs to render a PDF that is not installed."""
+
+
 class GitError(BillkeeperError):
     """A git command that billkeeper could not run, or that ran and failed."""
 

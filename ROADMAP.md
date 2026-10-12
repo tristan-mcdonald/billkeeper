@@ -560,11 +560,11 @@ Run the full test suite, make sure it passes, and commit with a descriptive mess
 
 **Acceptance criteria**
 
-- [ ] `src/billkeeper/render.py` exists; `jinja2` is a declared dependency.
-- [ ] The shipped `invoice.typ` sets Inter and JetBrains Mono with fallbacks, under a comment explaining how to change the typeface and noting the OFL 1.1 licence.
-- [ ] A real `pandoc --pdf-engine=typst` run produces a valid PDF; two runs are byte-identical.
-- [ ] `check_tools` names every missing binary with an install hint, and that test runs everywhere.
-- [ ] `tests/test_render.py` passes locally and in CI, where Pandoc and Typst are installed.
+- [x] `src/billkeeper/render.py` exists; `jinja2` is a declared dependency.
+- [x] The shipped `invoice.typ` sets Inter and JetBrains Mono with fallbacks, under a comment explaining how to change the typeface and noting the OFL 1.1 licence.
+- [x] A real `pandoc --pdf-engine=typst` run produces a valid PDF; two runs are byte-identical.
+- [x] `check_tools` names every missing binary with an install hint, and that test runs everywhere.
+- [x] `tests/test_render.py` passes locally and in CI, where Pandoc and Typst are installed.
 
 ---
 
